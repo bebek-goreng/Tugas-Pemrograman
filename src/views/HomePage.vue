@@ -1,56 +1,102 @@
 <template>
   <ion-page>
-    <ion-header :translucent="true">
-      <ion-toolbar>
-        <ion-title>Blank</ion-title>
+    <ion-header>
+      <ion-toolbar color="light">
+        <ion-title>Crypto Prices</ion-title>
       </ion-toolbar>
     </ion-header>
 
-    <ion-content :fullscreen="true">
-      <ion-header collapse="condense">
-        <ion-toolbar>
-          <ion-title size="large">Blank</ion-title>
-        </ion-toolbar>
-      </ion-header>
-
-      <div id="container">
-        <strong>Ready to create an app?</strong>
-        <p>Start with Ionic <a target="_blank" rel="noopener noreferrer" href="https://ionicframework.com/docs/components">UI Components</a></p>
+    <ion-content class="ion-padding">
+      <div style="display: flex; justify-content: center; margin-bottom: 20px;">
+        <ion-button @click="getData" color="primary">Get Data</ion-button>
       </div>
+
+      <ion-list v-if="cryptos.length" class="crypto-table">
+        <ion-item class="header-row">
+          <ion-label class="header-label">Name</ion-label>
+          <ion-label class="header-label">Symbol</ion-label>
+          <ion-label class="header-label">Price (USD)</ion-label>
+        </ion-item>
+        <ion-item v-for="(crypto, index) in cryptos" :key="index" class="data-row">
+          <ion-label>{{ crypto.name }}</ion-label>
+          <ion-label>{{ crypto.symbol }}</ion-label>
+          <ion-label>{{ crypto.price_usd }}</ion-label>
+        </ion-item>
+      </ion-list>
+
+      <ion-spinner v-if="loading"></ion-spinner>
     </ion-content>
   </ion-page>
 </template>
 
-<script setup lang="ts">
-import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar } from '@ionic/vue';
+<script lang="ts">
+import { defineComponent } from 'vue';
+import axios from 'axios';
+
+interface Crypto {
+  name: string;
+  symbol: string;
+  price_usd: string;
+}
+
+export default defineComponent({
+  name: 'HomePage',
+  data() {
+    return {
+      cryptos: [] as Crypto[],
+      loading: false,
+    };
+  },
+  methods: {
+    async getData() {
+      this.loading = true;
+      try {
+        const response = await axios.get<{ data: Crypto[] }>('https://api.coinlore.net/api/tickers/');
+        this.cryptos = response.data.data;
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      } finally {
+        this.loading = false;
+      }
+    },
+  },
+});
 </script>
 
 <style scoped>
-#container {
+ion-button {
+  margin-top: 1rem;
+}
+
+ion-spinner {
+  margin-top: 1rem;
+}
+
+.crypto-table {
+  background-color: black;
+  color: white; 
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.header-row {
+  background-color: #333; 
+  border-bottom: 1px solid #ccc;
+}
+
+.header-label {
+  font-weight: bold;
+}
+
+.data-row {
+  border-bottom: 1px solid #ccc;
+}
+
+ion-label {
+  width: 33.33%;
   text-align: center;
-  
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 50%;
-  transform: translateY(-50%);
-}
-
-#container strong {
-  font-size: 20px;
-  line-height: 26px;
-}
-
-#container p {
-  font-size: 16px;
-  line-height: 22px;
-  
-  color: #8c8c8c;
-  
-  margin: 0;
-}
-
-#container a {
-  text-decoration: none;
+  padding: 10px 0;
+  display: inline-block;
 }
 </style>
